@@ -1,0 +1,47 @@
+table,tr,td{
+    border: 1px solid black;
+    border-collapse: collapse;
+    text-align:center;
+     padding: 4px;
+     width: 510px;
+  }
+  table{
+  height: 250px
+  }
+  #ast{
+  color:red;
+  }
+  
+  select {
+  text-align-last:center;
+  }
+  
+  
+  #mySearch{
+  background-color:lightgrey;
+  border-radius:3px;
+  padding:5px;
+  padding-left:10px;
+  padding-right:10p x;
+  border:0px solid white; 
+  }
+  
+  #mySearch:hover{
+  background-color: #4CAF50;
+  border:0px solid green;
+  color: #ffffff;
+  }
+  
+  #myClear{
+  background-color:lightgrey;
+  border-radius:3px;
+  padding:5px;
+  padding-left:10px;
+  padding-right:10p x;
+  border:0px solid white; 
+  }
+  #myClear:hover{
+  background-color: #4CAF50;
+  border:0px solid green;
+  color: #ffffff;
+  }
