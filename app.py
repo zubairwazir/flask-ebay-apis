@@ -7,7 +7,8 @@ app.debug = True
 
 @app.route("/", methods=['GET'])
 def index():
-    return (app.send_static_file('ebay.html'))
+    # return (app.send_static_file('ebay.html'))
+    return render_template("index.html")
 
 
 @app.route("/search-ebay", methods=['GET'])
