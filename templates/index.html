@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- <link rel="stylesheet" type="text/css" href="C:\Users\mruna\myproject\static\ebay.css" /> -->
+	<style>
+		table,
+		tr,
+		td {
+			border: 1px solid black;
+			border-collapse: collapse;
+			text-align: center;
+			padding: 4px;
+			width: 510px;
+
+		}
+
+		table {
+			height: 250px;
+			margin: 0 auto;
+			font-size: smaller;
+			border: 3px solid;
+		}
+
+		#ast {
+			color: red;
+		}
+
+		select {
+			text-align-last: center;
+		}
+
+
+		#mySearch {
+			background-color: lightgrey;
+			border-radius: 3px;
+			padding: 5px;
+			padding-right: 10p x;
+			border: 0px solid white;
+		}
+
+		#mySearch:hover,
+		#showmore:hover,
+		#showless:hover {
+			background-color: #4CAF50;
+			border: 0px solid green;
+			color: #ffffff;
+		}
+
+		#myClear {
+			background-color: lightgrey;
+			border-radius: 3px;
+			padding: 5px;
+			padding-right: 10p x;
+			border: 0px solid white;
+		}
+
+		#myClear:hover {
+			background-color: #4CAF50;
+			border: 0px solid green;
+			color: #ffffff;
+		}
+
+		#showmore {
+			margin-left: 48%;
+			display: none;
+			margin-top: 7px;
+			background-color: lightgrey;
+			border-radius: 3px;
+			padding: 5px;
+			border: 0px solid white;
+		}
+
+		#showless {
+			margin-left: 48%;
+			display: none;
+			margin-top: 7px;
+			background-color: lightgrey;
+			border-radius: 3px;
+			padding: 5px;
+			border: 0px solid white;
+		}
+
+		#rf {
+			text-align: center;
+			margin : 15px 0;
+			font-size: 1.4em;
+
+		}
+
+		#boxmodel {
+			display: none;
+		}
+
+		.box {
+			margin: 0 auto;
+			display: flex;
+			/* height: 170px; */
+			width: 600px;
+			border: 1.5px solid black;
+			border-radius: 5px;
+			background-color: #F0F0F0;
+			margin-bottom: 5px;
+			font-size: smaller;
+			align-items: center;
+			box-sizing: border-box;
+    		padding: 2px;
+			
+		}
+
+		.box:hover{
+			box-shadow: 0px 2px 6px 4px lightgrey;
+		}
+
+		#contain {
+			display: flex;
+			flex-direction: column;
+			width: 440px;
+			margin-left: 4%;
+			padding-bottom: 0px;
+			height: 100%;
+			padding-top: 18px;
+		}
+
+		#contain>* {
+			margin-bottom: 14px;
+		}
+
+		#line {
+			border: none;
+			border-top: 1.5px solid grey;
+			width: 600px;
+		}
+
+		#img_id:hover {
+			transform: scale(1.5);
+			transition: 0.8s;
+		}
+
+		#img_id {
+			margin-left: 50px;
+			border: 3px solid #a69c9c;
+			height: 100px;
+			width: 75px;
+			transition: 0.8s;
+		}
+
+
+
+		.title_id {
+
+			color: purple;
+			text-decoration: underline;
+			white-space: nowrap;
+			margin-top: 15px;
+		}
+
+		#product_link {
+			overflow: hidden;
+			text-overflow: ellipsis;
+
+		}
+
+
+		#cond_id {
+			display: flex;
+			align-items: center;
+		}
+
+		#sel_id {
+			padding-top: 55px;
+			float: left;
+			margin-left: -15em;
+		}
+
+		#ship_id {
+			padding-top: 65px;
+			float: left;
+			margin-left: -15em;
+		}
+
+		#price_id {
+			padding-top: 0px;
+
+			margin-left: 0px;
+		}
+
+		#topimg_id {
+			margin-left: 8px;
+			height: 28px;
+			display: inline-block;
+		}
+
+		#redirect {
+			height: 14px;
+			cursor: pointer;
+			filter: opacity(0.5);
+		}
+
+		#card-container {
+			margin: 0 auto;
+			display: block;
+
+		}
+
+		.expansion {
+			display: none;
+			margin-bottom: 0 !important;
+		}
+
+		.cross {
+			text-align: end;
+			visibility: hidden;
+			cursor: pointer;
+			font-size: smaller;
+		}
+
+		.content-box:nth-child(n+4) {
+			display: none;
+		}
+
+		#cat_id,
+		#loc_id {
+			font-style: italic;
+		}
+
+		#nametag {
+			font-style: normal;
+		}
+
+		#from,
+		#to {
+			width: 50px;
+			margin-left: 4px;
+		}
+
+		.location {
+			display: none;
+		}
+
+		#no-results {
+			display: none;
+			text-align: center;
+		}
+
+		.expansion>* {
+			margin-bottom: 14px;
+		}
+
+		.right-content {
+			display: flex;
+		}
+		
+		.price-range {
+			margin-left: 8px;
+		}
+
+	</style>
+	<script>
+		function expand(index) {
+			document.getElementById("expansion" + index).style.display = "block";
+			document.getElementById("cross-" + index).style.visibility = "visible";
+			document.getElementById("location-" + index).style.display = "inline";
+			// document.getElementById("newbox-" + index).style.height = "200px";
+			document.getElementById("title_id-" + index).style.whiteSpace = "normal";
+		}
+
+
+		function removeMe(index, event) {
+			document.getElementById("expansion" + index).style.display = "none";
+			document.getElementById("cross-" + index).style.visibility = "hidden";
+			document.getElementById("location-" + index).style.display = "none";
+			// document.getElementById("newbox-" + index).style.height = "170px";
+			document.getElementById("title_id-" + index).style.whiteSpace = "nowrap";
+
+			event.stopPropagation();
+		}
+
+		function sendData(event) {
+			var priceFrom = parseFloat(document.getElementById("from").value);
+			var priceTo = parseFloat(document.getElementById("to").value);
+			var flag = true;
+
+			if (!isNaN(priceFrom) && !isNaN(priceTo)) {
+				if (priceFrom <= 0.0 || priceTo <= 0.0) {
+					alert("Price range values cannot be negative! Please try a value greater than equal to 0.0");
+					return false;
+					//flag = false;
+				}
+
+				if (priceFrom > priceTo) {
+					alert("Oops! Lower price cannot be greater than upper price limit! Please try again.");
+					//flag = false;
+					return false;
+				}
+			}
+
+			if (isNaN(priceFrom)) {
+				if (priceTo <= 0.0) {
+					alert("Price range values cannot be negative! Please try a value greater than equal to 0.0");
+					return false;
+				}
+			}
+
+			if (isNaN(priceTo)) {
+				if (priceFrom <= 0.0) {
+					alert("Price range values cannot be negative! Please try a value greater than equal to 0.0");
+					return false;
+				}
+			}
+
+			var req = new XMLHttpRequest();
+			var result = document.getElementById('result');
+			var form = document.getElementById("myForm");
+			var FD = new FormData(form);
+			console.log("inside sendData:" + form);
+			req.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200) {
+
+					var response = JSON.parse(req.responseText)
+
+					if (response.data["count"] == "0") {
+						document.getElementById("no-results").style.display = "block";
+						return;
+					}
+
+					document.getElementById("showmore").style.display = "block";
+
+					if (flag == true) {
+						document.getElementById("boxmodel").style.display = "block";
+						document.getElementById("myClear").addEventListener("click", function () {
+							document.getElementById("boxmodel").style.display = "none";
+							document.getElementById("showmore").style.display = "none";
+
+						})
+						console.log(response.data["entries"]);
+						if (response.data["entries"] != 0) {
+							document.getElementById("ent").innerHTML = response.data["entries"];
+							document.getElementById("key").innerHTML = response.data["keyword"];
+						}
+						else {
+							tempText += "<b>No results found</span></b>";
+						}
+
+						var i;
+						var tempText = "";
+						var ebayDefaultUrl = "https://thumbs1.ebaystatic.com/pict/04040_0.jpg";
+						var expectedDefaultUrl = "https://www.csci571.com/hw/hw6/images/ebay_default.jpg";
+
+						//document.getElementById("card").style.display="inline-block";
+						for (i = 0; i < 10; i++) {
+							tempText += `<div class="box content-box" id="newbox-${i}" onclick="expand(${i})">`;
+							if (response.data.items[i]["galleryURL"] == ebayDefaultUrl) {
+								response.data.items[i]["galleryURL"] = expectedDefaultUrl;
+							}
+							tempText += "<img id='img_id' src='" + response.data.items[i]["galleryURL"] + "'/>";
+							tempText += "<div class='right-content'>"
+							tempText += "<div id='contain'>";
+							// tempText += `<div onclick='removeMe(${i}, event)' class='cross' id='cross-${i}'>&#x274C;</div>`;
+							tempText += `<div id='product_link'><b><a class="title_id" id='title_id-${i}' href='` + response.data.items[i]["viewItemURL"] + "' target='_blank'>" + response.data.items[i]["title"] + "</a></b></div>";
+							tempText += "<div id='cat_id'><span id='nametag'>Category:</span>" + response.data.items[i]["categoryName"];
+							tempText += "<a href='" + response.data.items[i]["viewItemURL"] + "' target='_blank'><img id = 'redirect' src = 'https://www.csci571.com/hw/hw6/images/redirect.png'/></a>";
+							tempText += "</div>";
+							tempText += "<div id='cond_id'>Condition:" + response.data.items[i]["condition"];
+							if (response.data.items[i]["topRatedListing"] == "true") {
+								tempText += "<img id='topimg_id' src='https://www.csci571.com/hw/hw6/images/topRatedImage.png'/>";
+							}
+							tempText += "</div>";
+
+							tempText += `<div id='expansion${i}' class='expansion'>`;
+							if (response.data.items[i]["returnsAccepted"] == "true") {
+								tempText += "<div>Seller <b>accepts</b> returns</div>";
+							}
+							else {
+								tempText += "<div>Seller <b>does not accept returns</b></div>";
+							}
+							tempText += "<div>";		//free ship div start
+							if (response.data.items[i]["shippingServiceCost"] == 0.0) {
+								tempText += "Free Shipping";
+							}
+							else {
+								tempText += "No Free Shipping";
+							}
+							if (response.data.items[i]["expeditedShipping"] == "true") {
+								tempText += " -- Expedited Shipping available";
+							}
+
+							tempText += "</div>";		//free ship div end
+							//tempt_text += "<div><span id='loc_id'>From:"+ response.data["location"][i]+"</span></div>";
+							tempText += "</div>";		//expansion div end
+							tempText += "<div id='price_id'><b>Price: $" + response.data.items[i]["currentPrice"] + "</b>";
+							if (response.data.items[i]["shippingServiceCost"] > 0.0) {
+								tempText += "<b>(+ $ " + response.data.items[i]["shippingServiceCost"] + " for shipping)</b>";
+							}
+							tempText += `<span class="location" id="location-${i}"><i> From ${response.data.items[i]["location"]}</i></span>`;
+							tempText += "</div>";
+
+							tempText += "</div>";		//contain div end
+							tempText += `<div onclick='removeMe(${i}, event)' class='cross' id='cross-${i}'>&#x274C;</div>`;
+							tempText += "</div>";		//right-content div end
+							tempText += "</div>";		//box div end
+							//document.getElementById("box1").appendChild(tempText);
+
+						}
+						document.getElementById("card").innerHTML = tempText;
+
+						document.getElementById("showmore").addEventListener("click", function () {
+							document.getElementById("showmore").style.display = "none";
+							document.getElementById("showless").style.display = "block";
+							var boxes = document.getElementsByClassName("box");
+							for (var box of boxes) {
+								box.classList.remove("content-box");
+							}
+						})
+
+						document.getElementById("showless").addEventListener("click", function () {
+
+							document.getElementById("showless").style.display = "none";
+							document.getElementById("showmore").style.display = "block";
+							document.getElementById("new_cards").style.display = "none";
+							var boxes = document.getElementsByClassName("box");
+							for (var box of boxes) {
+								box.classList.add("content-box");
+							}
+
+						})
+
+
+					}
+				}
+				else {
+					result.innerHTML = "";
+				}
+			}
+
+			var param = new URLSearchParams(FD);
+			param = param.toString();
+			req.open('GET', '/search-ebay?' + param, true);
+			req.send();
+			event.preventDefault();
+		}
+
+		function resetResult() {
+			document.getElementById("no-results").style.display = "none";
+			document.getElementById("boxmodel").style.display = "none";
+			document.getElementById("showmore").style.display = "none";
+			document.getElementById("showless").style.display = "none";
+		}
+
+	</script>
+
+
+
+</head>
+
+<body>
+	<div class="eBayLogo">
+		<center><a href="https://www.ebay.com/" target='_blank'><img style="width:170px"
+					src=" https://www.csci571.com/hw/hw6/images/eBayLogo.png"></a>
+			<b style="vertical-align: 20px; font-size: 34px;">Shopping</b></center>
+	</div>
+
+	<form id="myForm" name="myForm" onsubmit="return sendData(event)">
+
+		<table>
+			<tr>
+				<td> <label for="Keyword"><b>Key Words<a id="ast">*</a>:</b></label>
+					<input type="text" id="Keyword" name="Keyword" required /> </td>
+			</tr>
+			<tr>
+				<td> <label for="price range"><b>Price Range:</b></label>
+					<label class="price-range" for="from">From </label>
+					<input type="number" id="from" name="from" step="0.1">
+					<label class="price-range" for="to">to </label>
+					<input type="number" id="to" name="to" step="0.1">
+
+				</td>
+			</tr>
+			<tr>
+				<td id="cond">
+					<label for="condition"> <b>Condition:</b> </label>
+					<input type="checkbox" id="new" name="cond" value="1000">
+					<label for="new"> New </label>
+					<input type="checkbox" id="used" name="cond" value="3000">
+					<label for="used">Used</label>
+					<input type="checkbox" id="very good" name="cond" value="4000">
+					<label for="very good">Very Good</label>
+					<input type="checkbox" id="good" name="cond" value="5000">
+					<label for="good">Good</label>
+					<input type="checkbox" id="acceptable" name="cond" value="6000">
+					<label for="acceptable">Acceptable</label> </td>
+			</tr>
+			<tr>
+				<td>
+					<label for="seller"><b>Seller:</b></label>
+					<input type="checkbox" id="ra" name="ra" value="Return Accepted">
+					<label for="return accepted">Return Accepted</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label for="shipping"><b>Shipping:</b></label>
+					<input type="checkbox" id="ship" name="ship" value="free">
+					<label for="free">Free</label>
+					<input type="checkbox" id="ship" name="ship" value="expedited">
+					<label for="expedited">Expedited</label></td>
+			</tr>
+			<tr>
+				<td>
+					<label for="sort by"><b>Sort By:</b></label>
+
+					<select id="sort_by" name="sort_by">
+						<option value="BestMatch">Best Match</option>
+						<option value="CurrentPriceHighest">Price: highest first</option>
+						<option value="PricePlusShippingHighest">Price + Shipping: highest first</option>
+						<option value="PricePlusShippingLowest">Price + Shipping: lowest first</option>
+
+					</select>
+
+				</td>
+			</tr>
+			<tr>
+				<td>
+
+					<input type="reset" id="myClear" value="Clear" onclick="resetResult()">
+					<input type="submit" id="mySearch" value="Search" onclick="resetResult()">
+
+				</td>
+			</tr>
+		</table>
+	</form>
+	<div id="no-results">
+		<h3>No Results Found</h3>
+	</div>
+	<div class="card-container">
+		<div id="boxmodel">
+			<div id="rf">
+				<b><span id="ent"></span> Results found for <i><span id="key"> </span></i></b>
+				<!-- <b><span id="no-results"> No results found</span></b> -->
+			</div>
+			<div id="result"></div>
+
+
+			<hr id="line">
+			</hr>
+			<div class="card" id="card"></div>
+		</div>
+		<div id="new_cards"></div>
+		<input type="button" id="showmore" value="Show More">
+		<input type="button" id="showless" value="Show Less">
+	</div>
+
+
+</body>
+
+</html>
