@@ -132,7 +132,50 @@ def process_form():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify(data={"error": str(e)}), 500
+    
+
+@app.route("/home", methods=["GET"])
+def home():
+    # Default keyword for homepage items
+    keyword = "electronics"  # You can set a category or popular keyword
+    sort_by = "BestMatch"
+
+    # Construct the eBay API URL for default items
+    base_url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=TomasSad-betterse-PRD-980426f0d-6a936209&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD"
+    url = f"{base_url}&keywords={keyword}&paginationInput.entriesPerPage=10&sortOrder={sort_by}"
+
+    try:
+        # Fetch and parse JSON data
+        response = urllib.request.urlopen(url)
+        data = json.load(response)
+
+        # Extract search results
+        search_response = data.get("findItemsAdvancedResponse", [{}])[0]
+        search_result = search_response.get("searchResult", [{}])[0]
+
+        if search_result.get("@count", "0") == "0":
+            return render_template("home.html", items=[])
+
+        items = search_result.get("item", [])
+        response_items = []
+
+        # Prepare response items
+        for item in items:
+            response_items.append({
+                "galleryURL": item["galleryURL"][0],
+                "title": item["title"][0],
+                "viewItemURL": item["viewItemURL"][0],
+                "price": item["sellingStatus"][0]["convertedCurrentPrice"][0]["__value__"],
+                "location": item["location"][0],
+            })
+
+        return render_template("home.html", items=response_items)
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return render_template("home.html", items=[], error=str(e))
+
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=8000, debug=True)
+    app.run(debug=True)
