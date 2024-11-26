@@ -15,7 +15,6 @@ def processForm():
     check = "false"
     freeshipcheck = "false"
     expshipcheck = "false"
-    #mykey=MrunalDe-MrunalAp-PRD-d2eb4905c-3e24c023
     keyword = request.args.get("Keyword")
     priceFrom = request.args.get("from")
     priceTo = request.args.get("to")
@@ -128,41 +127,24 @@ def processForm():
             str4 += "&itemFilter(5).name=ExpeditedShippingType&itemFilter(5).value(0)=Expedited"
 
 
-    #url="https://svcs.ebay.com/services/search/FindingService/v1?OPERATIONNAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=MrunalDe-MrunalAp-PRD-d2eb4905c-3e24c023&RESPONSEDATA-FORMAT=JSON&RESTPAYLOAD&keywords=iphone&paginationInput.entriesPerPage=25&sortOrder=BestMatch&itemFilter(0).name=MaxPrice&itemFilter(0).value=25&itemFilter(0).paramName=Currency&itemFilter(0).paramValue=USD&itemFilter(1).name=MinPrice&itemFilter(1).value=10&itemFilter(1).paramName=Currency&itemFilter(1).paramValue=USD&itemFilter(2).name=ReturnsAcceptedOnly&itemFilter(2).value=false&itemFilter(3).name=Condition&itemFilter(3).value(0)=2000&itemFilter(3).value(1)=3000"
-    #url="https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=MrunalDe-MrunalAp-PRD-d2eb4905c-3e24c023&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords=iphone&paginationInput.entriesPerPage=25&sortOrder=BestMatch&itemFilter(0).name"
-    #url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=MrunalDe-MrunalAp-PRD-d2eb4905c-3e24c023&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords="+keyword+"&paginationInput.entriesPerPage=25&sortOrder=bestmatch&itemFilter(0).name=MaxPrice&itemFilter(0).value="+priceTo+"&itemFilter(0).paramName=Currency&itemFilter(0).paramValue=USD&itemFilter(1).name=MinPrice&itemFilter(1).value="+priceFrom+"&itemFilter(1).paramName=Currency&itemFilter(1).paramValue=USD&itemFilter(2).name=Condition&itemFilter(2).value(0)=1000&itemFilter(2).value(1)=3000"
-
-    url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=MrunalDe-MrunalAp-PRD-d2eb4905c-3e24c023&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords=" + keyword + "&paginationInput.entriesPerPage=25&sortOrder=" + sortby + str0 + constr + str2 + str3 + str4
+    url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=TomasSad-betterse-PRD-980426f0d-6a936209&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords=" + keyword + "&paginationInput.entriesPerPage=25&sortOrder=" + sortby + str0 + constr + str2 + str3 + str4
     print(url)
     url_req = urllib.request.urlopen(url)
     json_obj = json.load(url_req)
 
     rf = json_obj.get("findItemsAdvancedResponse")
-    # top_image = ""
-    # imageURL=[]
-    # item_title = []
-    # link = []
-    # category_name = []
-    # condition_item=[]
-    # top_image = []
-    # current_price =[]
-    # ship_cost = []
-    # ret_acc = []
-    # locations = []
-    #print(len(rf))
+
     for i in range(len(rf)):
         x = rf[i]
+
     l = x["paginationOutput"]
-    #print("l:"+l)
     searchResult = x["searchResult"]
-    #print(len(searchResult))
 
     # return if count is 0
     if searchResult[0]["@count"] == "0":
         return jsonify(data={"count": "0"})
 
     item = (searchResult[0]["item"])
-    #print(len(item))
 
     keysToCheck = set([
         "galleryURL", "title", "viewItemURL", "returnsAccepted",
@@ -185,54 +167,29 @@ def processForm():
         itemToAdd = {}
 
         itemToAdd["galleryURL"] = item1["galleryURL"][0]
-        # iURL = item1["galleryURL"][0]
-        # imageURL.append(iURL)
 
         itemToAdd["title"] = item1["title"][0]
-        # item_var = item1["title"][0]
-        # item_title.append(item_var)
 
         itemToAdd["viewItemURL"] = item1["viewItemURL"][0]
-        # link_var = item1["viewItemURL"][0]
-        # link.append(link_var)
 
         itemToAdd["returnsAccepted"] = item1["returnsAccepted"][0]
-        # ret_acc.append(item1["returnsAccepted"][0] if item1.__contains__("returnsAccepted") else "false")
 
         itemToAdd["categoryName"] = item1["primaryCategory"][0]["categoryName"][0]
-        # item2 = item1["primaryCategory"][0]
-        # category_name_var  = item2["categoryName"][0]
-        # category_name.append(category_name_var)
 
         itemToAdd["condition"] = item1["condition"][0]["conditionDisplayName"][0]
-        # item3 = item1["condition"][0]
-        # condition_item_var = item3["conditionDisplayName"][0]
-        # condition_item.append(condition_item_var)
 
         itemToAdd["topRatedListing"] = item1["topRatedListing"][0]
-        # top_rated_var = item1["topRatedListing"][0]
-        # if (top_rated_var == "true"):
-        #     top_image.append("true")
-        # else:
-        #     top_image.append("false")
 
         itemToAdd["currentPrice"] = item1["sellingStatus"][0]["convertedCurrentPrice"][0]["__value__"]
-        # item4 =  item1["sellingStatus"][0]
-        # curr_price = item4["convertedCurrentPrice"][0]
-        # current_price_var = float(curr_price["__value__"])
-        # current_price.append(current_price_var)
+
         if ("shippingServiceCost" in item1["shippingInfo"][0].keys()):
             itemToAdd["shippingServiceCost"] = item1["shippingInfo"][0]["shippingServiceCost"][0]["__value__"]
         else:
             itemToAdd["shippingServiceCost"] = 0.0
-        # print(item1["shippingInfo"][0].keys())
+
         itemToAdd["expeditedShipping"] = item1["shippingInfo"][0]["expeditedShipping"][0]
-        
-        # item5 = item1["shippingInfo"][0]
-        # ship_cost.append(item5)
 
         itemToAdd["location"] = item1["location"][0]
-        # locations.append(item1["location"][0])
 
         responseItems.append(itemToAdd)
 
