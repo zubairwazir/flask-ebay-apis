@@ -1,222 +1,138 @@
 from flask import Flask, request, render_template, jsonify
-import json, urllib.request
+import json
+import urllib.request
 
 app = Flask(__name__, static_folder="static")
 app.debug = True
 
 
-@app.route("/", methods=['GET'])
+@app.route("/", methods=["GET"])
 def index():
     return render_template("index.html")
 
 
-@app.route("/search-ebay", methods=['GET'])
-def processForm():
-    check = "false"
-    freeshipcheck = "false"
-    expshipcheck = "false"
-    keyword = request.args.get("Keyword")
-    priceFrom = request.args.get("from")
-    priceTo = request.args.get("to")
-
-    condition = request.args.getlist("cond")
-    seller = request.args.get("ra")
-    if (seller == "Return Accepted"):
-        check = "true"
-
+@app.route("/search-ebay", methods=["GET"])
+def process_form():
+    # Initialize flags and get parameters
+    keyword = request.args.get("Keyword", "")
+    price_from = request.args.get("from", "")
+    price_to = request.args.get("to", "")
+    conditions = request.args.getlist("cond")
+    seller = request.args.get("ra", "")
     shipping = request.args.getlist("ship")
-    if (len(shipping) != 0):
-        if (shipping[0] == "free"):
-            freeshipcheck = "true"
-        if (shipping[0] == "expedited" or len(shipping) == 2):
-            expshipcheck = "true"
+    sort_by = request.args.get("sort_by", "BestMatch")
 
-    sortby = request.args.get("sort_by")
+    return_accepted = "true" if seller == "Return Accepted" else "false"
+    free_shipping = "true" if "free" in shipping else "false"
+    expedited_shipping = "true" if "expedited" in shipping else "false"
 
-    # print(keyword)
-    # print(priceTo)
-    print(priceFrom)
-    print(len(priceFrom))
-    #print(condition)
-    #print(seller)
-    print(shipping)
-    #print(sortby)
-    # print(check)
-    constr = ""
-    str0 = ""
-    str2 = ""
-    str3 = ""
-    str4 = ""
-    newflag = False
+    # Build URL filters
+    filters = []
+    price_filter_index = 0
 
-    if (len(priceTo) == 0 and len(priceFrom) == 0):
-        str0 = ""
-    elif (len(priceTo) > 0 and len(priceFrom) == 0):
-        str0 += "&itemFilter(0).name=MaxPrice&itemFilter(0).value=" + priceTo + "&itemFilter(0).paramName=Currency&itemFilter(0).paramValue=USD"
-    elif (len(priceTo) == 0 and len(priceFrom) > 0):
-        str0 += "&itemFilter(0).name=MinPrice&itemFilter(0).value=" + priceFrom + "&itemFilter(0).paramName=Currency&itemFilter(0).paramValue=USD"
-    else:
-        str0 += "&itemFilter(0).name=MaxPrice&itemFilter(0).value=" + priceTo + "&itemFilter(0).paramName=Currency&itemFilter(0).paramValue=USD&itemFilter(1).name=MinPrice&itemFilter(1).value=" + priceFrom + "&itemFilter(1).paramName=Currency&itemFilter(1).paramValue=USD"
-        newflag = True
+    # Price filters
+    if price_from or price_to:
+        if price_to:
+            filters.append(
+                f"&itemFilter({price_filter_index}).name=MaxPrice&itemFilter({price_filter_index}).value={price_to}&itemFilter({price_filter_index}).paramName=Currency&itemFilter({price_filter_index}).paramValue=USD"
+            )
+            price_filter_index += 1
+        if price_from:
+            filters.append(
+                f"&itemFilter({price_filter_index}).name=MinPrice&itemFilter({price_filter_index}).value={price_from}&itemFilter({price_filter_index}).paramName=Currency&itemFilter({price_filter_index}).paramValue=USD"
+            )
+            price_filter_index += 1
 
-    print(len(str0))
+    # Condition filters
+    if conditions:
+        condition_filter = f"&itemFilter({price_filter_index}).name=Condition"
+        for i, condition in enumerate(conditions):
+            condition_filter += f"&itemFilter({price_filter_index}).value({i})={condition}"
+        filters.append(condition_filter)
+        price_filter_index += 1
 
-    if (len(str0) == 0 and len(condition) > 0):  #if no price range
-        constr += "&itemFilter(0).name=Condition"
-        for i in range(len(condition)):
-            constr += "&itemFilter(0).value(" + str(i) + ")=" + condition[i]
+    # Return Accepted filter
+    filters.append(
+        f"&itemFilter({price_filter_index}).name=ReturnsAcceptedOnly&itemFilter({price_filter_index}).value(0)={return_accepted}"
+    )
+    price_filter_index += 1
 
-    elif (len(condition) > 0 and len(str0) > 0
-          and newflag == False):  #if any of 1 price range
-        constr += "&itemFilter(1).name=Condition"
-        for i in range(len(condition)):
-            constr += "&itemFilter(1).value(" + str(i) + ")=" + condition[i]
+    # Free Shipping filter
+    filters.append(
+        f"&itemFilter({price_filter_index}).name=FreeShippingOnly&itemFilter({price_filter_index}).value(0)={free_shipping}"
+    )
+    price_filter_index += 1
 
-    elif (len(condition) > 0 and newflag == True):  #both price range
-        constr += "&itemFilter(2).name=Condition"
-        for i in range(len(condition)):
-            constr += "&itemFilter(2).value(" + str(i) + ")=" + condition[i]
-    else:
-        constr = ""
+    # Expedited Shipping filter
+    if expedited_shipping == "true":
+        filters.append(
+            f"&itemFilter({price_filter_index}).name=ExpeditedShippingType&itemFilter({price_filter_index}).value(0)=Expedited"
+        )
 
-    # if(seller==None)://compulsory
-    if (len(condition) == 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        str2 += "&itemFilter(0).name=ReturnsAcceptedOnly&itemFilter(0).value(0)=" + check
-    elif (len(condition) > 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        str2 += "&itemFilter(1).name=ReturnsAcceptedOnly&itemFilter(1).value(0)=" + check
-    elif (len(condition) == 0 and len(str0) > 0 and newflag == False):
-        str2 += "&itemFilter(1).name=ReturnsAcceptedOnly&itemFilter(1).value(0)=" + check
-    elif (len(str0) > 0 and newflag == False and len(condition) > 0):
-        str2 += "&itemFilter(2).name=ReturnsAcceptedOnly&itemFilter(2).value(0)=" + check
-    elif (len(condition) == 0 and newflag == True):
-        str2 += "&itemFilter(2).name=ReturnsAcceptedOnly&itemFilter(2).value(0)=" + check
-    else:
-        str2 += "&itemFilter(3).name=ReturnsAcceptedOnly&itemFilter(3).value(0)=" + check
+    # Construct the eBay API URL
 
-    #compulsory
-    if (len(condition) == 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        str3 += "&itemFilter(1).name=FreeShippingOnly&itemFilter(1).value(0)=" + freeshipcheck
-    elif (len(condition) > 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        str3 += "&itemFilter(2).name=FreeShippingOnly&itemFilter(2).value(0)=" + freeshipcheck
-    elif (len(condition) == 0 and len(str0) > 0 and newflag == False):
-        str3 += "&itemFilter(2).name=FreeShippingOnly&itemFilter(2).value(0)=" + freeshipcheck
-    elif (len(str0) > 0 and newflag == False and len(condition) > 0):
-        str3 += "&itemFilter(3).name=FreeShippingOnly&itemFilter(3).value(0)=" + freeshipcheck
-    elif (len(condition) == 0 and newflag == True):
-        str3 += "&itemFilter(3).name=FreeShippingOnly&itemFilter(3).value(0)=" + freeshipcheck
-    else:
-        str3 += "&itemFilter(4).name=FreeShippingOnly&itemFilter(4).value(0)=" + freeshipcheck
+    base_url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=TomasSad-betterse-PRD-980426f0d-6a936209&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD"
 
-    if (len(condition) == 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(2).name=ExpeditedShippingType&itemFilter(2).value(0)=Expedited"
-    elif (len(condition) > 0 and len(priceFrom) == 0 and len(priceTo) == 0):
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(3).name=ExpeditedShippingType&itemFilter(3).value(0)=Expedited"
-    elif (len(condition) == 0 and len(str0) > 0 and newflag == False):
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(3).name=ExpeditedShippingType&itemFilter(3).value(0)=Expedited"
-    elif (len(str0) > 0 and newflag == False and len(condition) > 0):
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(4).name=ExpeditedShippingType&itemFilter(4).value(0)=Expedited"
-    elif (len(condition) == 0 and newflag == True):
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(4).name=ExpeditedShippingType&itemFilter(4).value(0)=Expedited"
-    else:
-        if (expshipcheck == "true"):
-            str4 += "&itemFilter(5).name=ExpeditedShippingType&itemFilter(5).value(0)=Expedited"
+    url = f"{base_url}&keywords={keyword}&paginationInput.entriesPerPage=25&sortOrder={sort_by}{''.join(filters)}"
 
+    try:
+        # Fetch and parse JSON data
+        response = urllib.request.urlopen(url)
+        data = json.load(response)
 
-    url = "https://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsAdvanced&SERVICE-VERSION=1.0.0&SECURITY-APPNAME=TomasSad-betterse-PRD-980426f0d-6a936209&RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD&keywords=" + keyword + "&paginationInput.entriesPerPage=25&sortOrder=" + sortby + str0 + constr + str2 + str3 + str4
-    print(url)
-    url_req = urllib.request.urlopen(url)
-    json_obj = json.load(url_req)
+        # Extract search results
+        search_response = data.get("findItemsAdvancedResponse", [{}])[0]
+        search_result = search_response.get("searchResult", [{}])[0]
 
-    rf = json_obj.get("findItemsAdvancedResponse")
+        if search_result.get("@count", "0") == "0":
+            return jsonify(data={"count": "0"})
 
-    for i in range(len(rf)):
-        x = rf[i]
+        items = search_result.get("item", [])
+        response_items = []
 
-    l = x["paginationOutput"]
-    searchResult = x["searchResult"]
+        # Required keys
+        required_keys = {
+            "galleryURL",
+            "title",
+            "viewItemURL",
+            "returnsAccepted",
+            "primaryCategory",
+            "condition",
+            "topRatedListing",
+            "sellingStatus",
+            "shippingInfo",
+            "location",
+        }
 
-    # return if count is 0
-    if searchResult[0]["@count"] == "0":
-        return jsonify(data={"count": "0"})
+        # Prepare response items
+        for item in items[:10]:  # Limit to 10 items
+            if not required_keys.issubset(item.keys()):
+                continue
 
-    item = (searchResult[0]["item"])
+            response_item = {
+                "galleryURL": item["galleryURL"][0],
+                "title": item["title"][0],
+                "viewItemURL": item["viewItemURL"][0],
+                "returnsAccepted": item["returnsAccepted"][0],
+                "categoryName": item["primaryCategory"][0]["categoryName"][0],
+                "condition": item["condition"][0]["conditionDisplayName"][0],
+                "topRatedListing": item["topRatedListing"][0],
+                "currentPrice": item["sellingStatus"][0]["convertedCurrentPrice"][0]["__value__"],
+                "shippingServiceCost": item["shippingInfo"][0].get("shippingServiceCost", [{}])[0].get("__value__", 0.0),
+                "expeditedShipping": item["shippingInfo"][0]["expeditedShipping"][0],
+                "location": item["location"][0],
+            }
+            response_items.append(response_item)
 
-    keysToCheck = set([
-        "galleryURL", "title", "viewItemURL", "returnsAccepted",
-        "primaryCategory", "condition", "topRatedListing", "sellingStatus",
-        "shippingInfo", "location"
-    ])
+        # Pagination information
+        total_entries = int(search_response.get("paginationOutput", [{}])[0].get("totalEntries", [0])[0])
 
-    responseItems = []
+        return jsonify(data={"keyword": keyword, "entries": total_entries, "items": response_items})
 
-    for i in range(len(item)):
-        if len(responseItems) == 10:
-            break
-
-        item1 = item[i]
-
-        # if item doesn't have all required keys then skip it
-        if not keysToCheck.issubset(item1.keys()):
-            continue
-
-        itemToAdd = {}
-
-        itemToAdd["galleryURL"] = item1["galleryURL"][0]
-
-        itemToAdd["title"] = item1["title"][0]
-
-        itemToAdd["viewItemURL"] = item1["viewItemURL"][0]
-
-        itemToAdd["returnsAccepted"] = item1["returnsAccepted"][0]
-
-        itemToAdd["categoryName"] = item1["primaryCategory"][0]["categoryName"][0]
-
-        itemToAdd["condition"] = item1["condition"][0]["conditionDisplayName"][0]
-
-        itemToAdd["topRatedListing"] = item1["topRatedListing"][0]
-
-        itemToAdd["currentPrice"] = item1["sellingStatus"][0]["convertedCurrentPrice"][0]["__value__"]
-
-        if ("shippingServiceCost" in item1["shippingInfo"][0].keys()):
-            itemToAdd["shippingServiceCost"] = item1["shippingInfo"][0]["shippingServiceCost"][0]["__value__"]
-        else:
-            itemToAdd["shippingServiceCost"] = 0.0
-
-        itemToAdd["expeditedShipping"] = item1["shippingInfo"][0]["expeditedShipping"][0]
-
-        itemToAdd["location"] = item1["location"][0]
-
-        responseItems.append(itemToAdd)
-
-    a = l[0]
-    entries = int(a['totalEntries'][0])
-
-    # data = {
-    #     "keyword":keyword,
-    #     "entries":entries,
-    #     "shipping": shipping,
-    #     "ret_acc": ret_acc,
-    #     "imageURL": imageURL,
-    #     "item_title":item_title,
-    #     "link":link,
-    #     "category_name":category_name,
-    #     "condition_item":condition_item,
-    #     "top_image":top_image,
-    #     "current_price":current_price,
-    #     "ship_cost": ship_cost,
-    #     "locations": locations
-    # }
-    return jsonify(data={
-        "keyword": keyword,
-        "entries": entries,
-        "items": responseItems
-    })
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify(data={"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host='127.0.0.1', port=8000, debug=True)
